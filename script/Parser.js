@@ -113,7 +113,6 @@ $parser.uiToHash = function (vals) {
 var res_info = read_res_info();
 var raw_data = typeof res_info.content === "string" ? res_info.content : "";
 var sub_link = typeof res_info.link === "string" ? res_info.link : "";
-var sub_info = typeof res_info.info === "string" ? res_info.info : "";
 var res_type = res_info.type || "";
 var cur_ua = typeof res_info.user_agent === "string" ? res_info.user_agent : "";
 var has_ua = cur_ua.length > 0;
@@ -129,41 +128,6 @@ function get_ua() {
 
 function notify(title, body) {
     if (typeof $notify === "function") $notify("资源解析器", title, body);
-}
-
-function format_size(bytes) {
-    var total = Number(bytes);
-    if (!isFinite(total) || total <= 0) return "0KB";
-    var units = ["KB", "MB", "GB", "TB"];
-    var val = total / 1024;
-    var idx = 0;
-    while (val >= 1024 && idx < units.length - 1) {
-        val /= 1024;
-        idx++;
-    }
-    return idx === 0 ? Math.max(1, Math.round(val)) + "KB" : Number(val.toFixed(2)) + units[idx];
-}
-
-function format_expire(raw) {
-    var hit = raw.match(/expire=(\d+)/);
-    if (!hit || !hit[1]) return "长期有效";
-    var ts = Number(hit[1]);
-    if (!isFinite(ts) || ts <= 0) return "长期有效";
-    var date = new Date(ts < 1e12 ? ts * 1000 : ts);
-    if (isNaN(date.getTime())) return "长期有效";
-    var month = ("0" + (date.getMonth() + 1)).slice(-2);
-    var day = ("0" + date.getDate()).slice(-2);
-    return date.getFullYear() + "-" + month + "-" + day;
-}
-
-function notify_flow(enabled) {
-    if (!enabled || !sub_info) return;
-    var text = sub_info.replace(/\s*/g, "").toLowerCase();
-    var total = Number(((text.match(/total=(\d+)/) || [])[1]) || 0);
-    var up = Number(((text.match(/upload=(\d+)/) || [])[1]) || 0);
-    var down = Number(((text.match(/download=(\d+)/) || [])[1]) || 0);
-    if (!/total=\d+|upload=\d+|download=\d+|expire=\d+/.test(text)) return;
-    notify("", "订阅" + format_expire(text) + "\n全部流量" + format_size(total) + " > 已使用" + format_size(up + down));
 }
 
 function hash_arg(name) {
@@ -618,9 +582,13 @@ function load_nodes(text) {
 //节点处理
 var need_ua = res_type === "server" && hash_arg("ua") === "1";
 var need_note = hash_arg("note") === "1";
+var should_retry_ua = need_ua && !has_ua;
 
-if (need_ua && !has_ua) {
-    if (need_note) notify("", "已使用小火箭UA请求拉取完整节点下来!");
+if (should_retry_ua) {
+    if (need_note && should_retry_ua) {
+        var retry_node_count = load_nodes(raw_data).length;
+        notify("", "已启用小火箭UA请求拉取更多订阅节点共计 " + retry_node_count + " 节点");
+    }
     $done({ retry: { user_agent: get_ua() } });
 } else if (res_type === "server") {
     var keep_arg = hash_arg("keep"), drop_arg = hash_arg("drop"), trim_arg = hash_arg("trim");
@@ -706,19 +674,17 @@ if (need_ua && !has_ua) {
         }
     }
 
-    notify_flow(need_note);
-
     if (need_note && (keep_arg || drop_arg)) {
-        if (keep_arg && drop_arg) notify("节点保留及排除", "已保留" + keep_ok + "个 > 已排除" + drop_ok + "个");
-        else if (keep_arg) notify("节点保留", "已保留" + keep_ok + "个 > 排除" + keep_skip + "个");
-        else notify("节点排除", "已排除" + drop_ok + "个 > 保留" + drop_skip + "个");
+        var kept_count = keep_arg ? keep_ok : drop_ok;
+        var dropped_count = keep_arg ? (drop_arg ? drop_skip : keep_skip) : drop_skip;
+        notify("", "已保留" + kept_count + "个节点 >> 已排除" + dropped_count + "个节点");
     }
 
     $done({ content: out_list.join("\n") });
 
 //分流处理
 } else if (res_type === "filter") {
-  
+
     var keep_arg = hash_arg("keep");
     var drop_arg = hash_arg("drop");
     var keep_re = null, drop_re = null;
@@ -760,6 +726,5 @@ if (need_ua && !has_ua) {
     $done({ content: out_rules.join("\n") });
 
 } else {
-    notify_flow(need_note);
     $done({ content: raw_data });
 }
