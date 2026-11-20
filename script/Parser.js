@@ -585,10 +585,6 @@ var need_note = hash_arg("note") === "1";
 var should_retry_ua = need_ua && !has_ua;
 
 if (should_retry_ua) {
-    if (need_note && should_retry_ua) {
-        var retry_node_count = load_nodes(raw_data).length;
-        notify("", "已启用小火箭UA请求拉取更多订阅节点共计 " + retry_node_count + " 节点");
-    }
     $done({ retry: { user_agent: get_ua() } });
 } else if (res_type === "server") {
     var keep_arg = hash_arg("keep"), drop_arg = hash_arg("drop"), trim_arg = hash_arg("trim");
@@ -616,6 +612,7 @@ if (should_retry_ua) {
     var set_tag_re = /((?:^|,\s*)tag\s*=\s*)([^,]*)/i;
 
     var keep_ok = 0, keep_skip = 0, drop_ok = 0, drop_skip = 0;
+    var ua_fetched_count = 0;
 
     function set_tag(line, tag_name) {
         return line.replace(set_tag_re, function (_, head) { return head + tag_name; });
@@ -624,6 +621,8 @@ if (should_retry_ua) {
     for (var i = 0; i < pool.length; i++) {
         var line = pool[i].trim();
         if (!line || !qx_re.test(line)) continue;
+
+        if (need_ua && has_ua) ua_fetched_count++;
 
         line = line.replace(fix_eq_re, "$1=");
         var tag_name = ((line.match(get_tag_re) || [])[1] || "").trim();
@@ -674,6 +673,10 @@ if (should_retry_ua) {
         }
     }
 
+    if (need_note && need_ua && has_ua) {
+        notify("", "已启用小火箭UA请求拉取更多订阅节点共计 " + ua_fetched_count + " 节点");
+    }
+
     if (need_note && (keep_arg || drop_arg)) {
         var kept_count = keep_arg ? keep_ok : drop_ok;
         var dropped_count = keep_arg ? (drop_arg ? drop_skip : keep_skip) : drop_skip;
@@ -682,6 +685,7 @@ if (should_retry_ua) {
 
     $done({ content: out_list.join("\n") });
 
+    
 //分流处理
 } else if (res_type === "filter") {
 
