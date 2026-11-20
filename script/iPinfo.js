@@ -11,7 +11,7 @@ function maskIP(ip) {
 }
 
 var title = " ";
-var subtitle = obj.country + " IP " + maskIP(obj.query);
+var subtitle = obj.country + " IP:" + maskIP(obj.query);
 var ip = maskIP(obj.query);
 var description = "\n位置" + obj.country + " IP " + obj.query;
 
