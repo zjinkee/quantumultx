@@ -4,32 +4,91 @@
 
 var $parser = $parser || {};
 
-//可视化 UI
+// 可视化 UI
 $parser.hashSchema = function () {
     var kind = $resource.type || "";
     var secs = [];
-
+    
     if (kind === "server") {
         secs = [
             {
                 type: "group",
                 title: "节点处理",
                 items: [
-                    { type: "text", key: "keep", label: "节点保留", placeholder: "正则保留符合的节点" },
-                    { type: "text", key: "drop", label: "节点排除", placeholder: "正则排除符合的节点" },
-                    { type: "text", key: "name", label: "节点改名", placeholder: "如：香港HK:香港 分组用 +" },
-                    { type: "text", key: "sort", label: "节点排序", placeholder: "如：香港>台湾>韩国>美国" },
-                    { type: "text", key: "trim", label: "删除名称", placeholder: "匹配的名称会被删除" },
-                    { type: "switch", key: "emoji", label: "删除国旗", onValue: "1", offValue: "0" }
+                    {
+                        type: "text",
+                        key: "keep",
+                        label: "节点保留",
+                        placeholder: "正则保留符合的节点"
+                    },
+                    {
+                        type: "text",
+                        key: "drop",
+                        label: "节点排除",
+                        placeholder: "正则排除符合的节点"
+                    },
+                    {
+                        type: "text",
+                        key: "name",
+                        label: "节点改名",
+                        placeholder: "如：香港HK:香港 分组用 +"
+                    },
+                    {
+                        type: "text",
+                        key: "sort",
+                        label: "节点排序",
+                        placeholder: "如：香港>台湾>韩国>美国"
+                    },
+                    {
+                        type: "text",
+                        key: "trim",
+                        label: "删除名称",
+                        placeholder: "匹配的名称会被删除"
+                    },
+                    {
+                        type: "select",
+                        key: "emoji",
+                        label: "删除国旗",
+                        options: [
+                            { label: "关闭", value: "0" },
+                            { label: "打开", value: "1" }
+                        ]
+                    }
                 ]
             },
             {
                 type: "group",
                 title: "其他参数",
                 items: [
-                    { type: "switch", key: "ua", label: "拉取订阅", onValue: "1", offValue: "0", description: "开启使用替换UA尝试获取完整节点" },
-                    { type: "switch", key: "skip", label: "跳过证书", onValue: "1", offValue: "0", description: "控制TLS节点跳过证书校验" },
-                    { type: "switch", key: "note", label: "通知设置", onValue: "1", offValue: "0", description: "控制解析器所有的提醒通知" }
+                    {
+                        type: "select",
+                        key: "ua",
+                        label: "拉取订阅",
+                        description: "开启使用替换UA尝试获取完整节点",
+                        options: [
+                            { label: "关闭", value: "0" },
+                            { label: "打开", value: "1" }
+                        ]
+                    },
+                    {
+                        type: "select",
+                        key: "skip",
+                        label: "跳过证书",
+                        description: "控制TLS节点跳过证书校验",
+                        options: [
+                            { label: "关闭", value: "0" },
+                            { label: "打开", value: "1" }
+                        ]
+                    },
+                    {
+                        type: "select",
+                        key: "note",
+                        label: "通知设置",
+                        options: [
+                            { label: "关闭", value: "0" },
+                            { label: "打开", value: "1" }
+                        ]
+                    }
                 ]
             }
         ];
@@ -39,14 +98,26 @@ $parser.hashSchema = function () {
                 type: "group",
                 title: "分流处理",
                 items: [
-                    { type: "text", key: "keep", label: "规则保留", placeholder: "正则保留符合的规则" },
-                    { type: "text", key: "drop", label: "规则排除", placeholder: "正则排除符合的规则" }
+                    {
+                        type: "text",
+                        key: "keep",
+                        label: "规则保留",
+                        placeholder: "正则保留符合的规则"
+                    },
+                    {
+                        type: "text",
+                        key: "drop",
+                        label: "规则排除",
+                        placeholder: "正则排除符合的规则"
+                    }
                 ]
             }
         ];
     }
-
-    return { version: 1, sections: secs };
+    return {
+        version: 1,
+        sections: secs
+    };
 };
 
 $parser.hashToUI = function (hash) {
