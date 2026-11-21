@@ -730,13 +730,13 @@ if (should_retry_ua) {
     }
 
     if (need_note && need_ua && has_ua) {
-        notify("", "已启用替换UA请求拉取订阅节点共计 " + ua_fetched_count + " 节点");
+        notify("", "已启用替换UA请求拉取订阅共计 " + ua_fetched_count + " 节点");
     }
 
     if (need_note && (keep_arg || drop_arg)) {
         var kept_count = keep_arg ? keep_ok : drop_ok;
         var dropped_count = keep_arg ? (drop_arg ? drop_skip : keep_skip) : drop_skip;
-        notify("", "已保留" + kept_count + "个节点 ➟ 已排除" + dropped_count + "个节点");
+        notify("节点筛选⇣", "已保留" + kept_count + "个节点 ➟ 已排除" + dropped_count + "个节点");
     }
 
     $done({ content: out_list.join("\n") });
