@@ -50,8 +50,8 @@ $parser.hashSchema = function () {
                         key: "emoji",
                         label: "删除国旗",
                         options: [
-                            { label: "关闭", value: "0" },
-                            { label: "打开", value: "1" }
+                            { label: "打开", value: "1" },
+                            { label: "关闭", value: "0" }
                         ]
                     }
                 ]
@@ -64,29 +64,20 @@ $parser.hashSchema = function () {
                         type: "select",
                         key: "ua",
                         label: "拉取订阅",
-                        description: "开启使用替换UA尝试获取完整节点",
+                        description: "开启使用替换UA 尝试获取完整节点",
                         options: [
-                            { label: "关闭", value: "0" },
-                            { label: "打开", value: "1" }
-                        ]
-                    },
-                    {
-                        type: "select",
-                        key: "skip",
-                        label: "跳过证书",
-                        description: "控制TLS节点跳过证书校验",
-                        options: [
-                            { label: "关闭", value: "0" },
-                            { label: "打开", value: "1" }
+                            { label: "打开", value: "1" },
+                            { label: "关闭", value: "0" }
                         ]
                     },
                     {
                         type: "select",
                         key: "note",
                         label: "通知设置",
+                        description: "控制解析器所有的节点操作通知提醒",
                         options: [
-                            { label: "关闭", value: "0" },
-                            { label: "打开", value: "1" }
+                            { label: "打开", value: "1" },
+                            { label: "关闭", value: "0" }
                         ]
                     }
                 ]
@@ -216,10 +207,6 @@ function set_field(line, key, val) {
     var tag_pos = line.search(/,\s*tag\s*=/i);
     if (tag_pos !== -1) return line.slice(0, tag_pos) + ", " + key + "=" + val + line.slice(tag_pos);
     return line + ", " + key + "=" + val;
-}
-
-function has_tls(line) {
-    return /(?:^|,)\s*(?:over-tls\s*=\s*true|obfs\s*=\s*(?:wss|over-tls|tls))/i.test(line);
 }
 
 function remove_emoji(text) {
@@ -660,7 +647,7 @@ if (should_retry_ua) {
 } else if (res_type === "server") {
     var keep_arg = hash_arg("keep"), drop_arg = hash_arg("drop"), trim_arg = hash_arg("trim");
     var name_arg = hash_arg("name"), sort_arg = hash_arg("sort");
-    var no_emoji = hash_arg("emoji") === "1", skip_arg = hash_arg("skip");
+    var no_emoji = hash_arg("emoji") === "1";
 
     var keep_re = null, drop_re = null, trim_re = null;
     try { if (keep_arg) keep_re = new RegExp(keep_arg, "i"); } catch (err) {}
@@ -675,7 +662,6 @@ if (should_retry_ua) {
         });
     }
 
-    var skip_val = skip_arg === "1" ? "false" : (skip_arg === "0" ? "true" : "");
     var pool = load_nodes(raw_data), out_list = [];
     var qx_re = /^(shadowsocks|vmess|vless|trojan|http|socks5|anytls)=/i;
     var fix_eq_re = /^([a-z0-9]+)\s*=\s*/i;
@@ -726,7 +712,6 @@ if (should_retry_ua) {
             if (next_name !== tag_name) { tag_name = next_name; line = set_tag(line, tag_name); }
         }
 
-        if (skip_val && has_tls(line)) line = set_field(line, "tls-verification", skip_val);
         out_list.push(line);
     }
 
@@ -745,13 +730,13 @@ if (should_retry_ua) {
     }
 
     if (need_note && need_ua && has_ua) {
-        notify("", "已启用小火箭UA请求拉取更多订阅节点共计 " + ua_fetched_count + " 节点");
+        notify("", "已启用替换UA请求拉取订阅节点共计 " + ua_fetched_count + " 节点");
     }
 
     if (need_note && (keep_arg || drop_arg)) {
         var kept_count = keep_arg ? keep_ok : drop_ok;
         var dropped_count = keep_arg ? (drop_arg ? drop_skip : keep_skip) : drop_skip;
-        notify("", "已保留" + kept_count + "个节点 >> 已排除" + dropped_count + "个节点");
+        notify("", "已保留" + kept_count + "个节点 ➟ 已排除" + dropped_count + "个节点");
     }
 
     $done({ content: out_list.join("\n") });
